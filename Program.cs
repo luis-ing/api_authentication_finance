@@ -9,7 +9,7 @@ using System;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configurar EntityFramework con MySQL
-builder.Services.AddDbContext<FinancedbContext>(options =>
+builder.Services.AddDbContext<NotesDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("MySqlConnection"),
     new MySqlServerVersion(new Version(8, 0, 25))));
 
@@ -17,6 +17,8 @@ builder.Services.AddDbContext<FinancedbContext>(options =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,

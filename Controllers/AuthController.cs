@@ -4,6 +4,7 @@ using System.Text;
 using api_finance.DTO;
 using api_finance.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 
@@ -13,10 +14,10 @@ namespace api_finance.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly FinancedbContext _context;
+        private readonly NotesDbContext _context;
         private readonly IConfiguration _config;
 
-        public AuthController(FinancedbContext context, IConfiguration config)
+        public AuthController(NotesDbContext context, IConfiguration config)
         {
             _context = context;
             _config = config;
@@ -24,42 +25,68 @@ namespace api_finance.Controllers
 
         // Endpoint para registrar un usuario
         [HttpPost("register")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register(UserRLDto userData)
         {
-
-            var user = new Usuario
+            try
             {
-                NombreUsuario = userData.NombreUsuario,
-                Contrasena = BCrypt.Net.BCrypt.HashPassword(userData.Contrasena),
-                Email = userData.Email,
-                FechaCreacion = DateTime.Now,
-                Activo = true,
-                ImgUrl = Empty.ToString(),
-                TemaOscuro = false,
-            };
+                var userRegister = await _context.Users.SingleOrDefaultAsync(u => u.Mail == userData.Mail);
 
-            _context.Usuarios.Add(user);
-            await _context.SaveChangesAsync();
+                if (userRegister != null)
+                {
+                    return BadRequest("El correo ya se encuentra en uso");
+                }
 
-            return Ok("User registered");
+                var userAdd = new User
+                {
+                    Name = userData.Name,
+                    Pass = BCrypt.Net.BCrypt.HashPassword(userData.Pass),
+                    Mail = userData.Mail,
+                    DateCreated = DateTime.Now,
+                    IsActive = true,
+                };
+
+                _context.Users.Add(userAdd);
+                await _context.SaveChangesAsync();
+
+                return Ok("Usuario registrado correctamente");
+            }
+            catch (System.Exception ex)
+            {
+                BadRequest("Error: " + ex);
+                throw;
+            }
         }
 
         [HttpPost("login")]
+        [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult Login(LoginDto userData)
         {
-            var user = _context.Usuarios.SingleOrDefault(u => u.Email == userData.Email);
+            try
+            {
+                var user = _context.Users.SingleOrDefault(u => u.Mail == userData.Mail);
 
-            if (user == null || !BCrypt.Net.BCrypt.Verify(userData.Contrasena, user.Contrasena))
-            {
-                return Unauthorized("Invalid username or password");
+                if (user == null || !BCrypt.Net.BCrypt.Verify(userData.Pass, user.Pass))
+                {
+                    return Unauthorized("Usuario o contraseña invalido");
+                }
+                var userDto = new UserDto
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Mail = user.Mail
+                };
+                var token = GenerateJwtToken(userDto);
+                return Ok(new { user = userDto, token });
             }
-            var userDto = new UserDto
+            catch (System.Exception ex)
             {
-                Id = user.Id,
-                Email = user.Email
-            };
-            var token = GenerateJwtToken(userDto);
-            return Ok(new { user, token });
+                BadRequest("Error: " + ex);
+                throw;
+            }
         }
 
         private string GenerateJwtToken(UserDto user)
@@ -73,11 +100,10 @@ namespace api_finance.Controllers
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, jwt.Subject),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Mail),
                 new Claim("id", user.Id.ToString()),
-                new Claim("email", user.Email)
+                new Claim("mail", user.Mail)
             };
 
             var token = new JwtSecurityToken(

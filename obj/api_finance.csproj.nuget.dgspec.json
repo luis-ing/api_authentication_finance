@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\lklk9\\source\\repos\\api_finance\\api_finance.csproj": {}
+    "C:\\Users\\lklk9\\source\\repos\\api_finance\\api_finance.csproj": {}
   },
   "projects": {
-    "c:\\Users\\lklk9\\source\\repos\\api_finance\\api_finance.csproj": {
+    "C:\\Users\\lklk9\\source\\repos\\api_finance\\api_finance.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\lklk9\\source\\repos\\api_finance\\api_finance.csproj",
+        "projectUniqueName": "C:\\Users\\lklk9\\source\\repos\\api_finance\\api_finance.csproj",
         "projectName": "api_finance",
-        "projectPath": "c:\\Users\\lklk9\\source\\repos\\api_finance\\api_finance.csproj",
+        "projectPath": "C:\\Users\\lklk9\\source\\repos\\api_finance\\api_finance.csproj",
         "packagesPath": "C:\\Users\\lklk9\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\lklk9\\source\\repos\\api_finance\\obj\\",
+        "outputPath": "C:\\Users\\lklk9\\source\\repos\\api_finance\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
